@@ -6,8 +6,8 @@ import lombok.Setter;
 
 @Entity
 @Getter @Setter
-@Table(name = "Post_View")
-public class PostViewCount {
+@Table(name = "post_view_counts")
+public class PostViewCountEntity {
 
     @Id
     @Column(name = "post_id")
@@ -16,16 +16,16 @@ public class PostViewCount {
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "post_id")
-    private Post post;
+    private PostEntity post;
 
-    @Column(name = "views count", columnDefinition = "BIGINT DEFAULT 0", nullable = false)
+    @Column(name = "views_count", columnDefinition = "BIGINT DEFAULT 0", nullable = false)
     private Long viewsCount =  0L;
 
-    protected PostViewCount() {}
+    protected PostViewCountEntity() {}
 
-    public PostViewCount(Long postId) {
-        this.postId = postId;
-        this.viewsCount = 0L;
+    public PostViewCountEntity(PostEntity post) {
+        this.post = post;
+
     }
 
     // 조회수 증가 편의 메서드

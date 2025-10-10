@@ -1,6 +1,6 @@
 package com.ktbweek4.community.comment.entity;
 
-import com.ktbweek4.community.post.entity.Post;
+import com.ktbweek4.community.post.entity.PostEntity;
 import com.ktbweek4.community.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter @ Setter
-@Table(name = "Comment")
+@Table(name = "comments")
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,7 +25,7 @@ public class Comment {
     // comment n : 1 post
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
-    private Post post;
+    private PostEntity post;
 
     // 읽기 전용 칼럼 - 쿼리 최적화용
     @Column(name = "user_id", insertable = false, updatable = false)
@@ -34,13 +34,13 @@ public class Comment {
     @Column(name = "post_id", insertable = false, updatable = false)
     private Long postId;
 
-    @Column(name = "content", length = 255)
+    @Column(name = "content", length = 255, nullable = false)
     private String content;
 
-    @Column(name = "likes_count", columnDefinition = "INT DEFAULT 0")
+    @Column(name = "likes_count", columnDefinition = "INT DEFAULT 0", nullable = false)
     private Integer likesCount = 0;
 
-    @Column(name = "created_at", columnDefinition = "DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6)", updatable = false)
+    @Column(name = "created_at", columnDefinition = "DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6)", insertable = false,updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", columnDefinition = "DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)")
@@ -48,13 +48,11 @@ public class Comment {
 
     protected Comment() {}
 
-    public Comment(Long userId, Long postId, String content) {
-        this.authorId = userId;
-        this.postId = postId;
+    public Comment(User author, PostEntity post, String content) {
+        this.author = author;
+        this.post = post;
         this.content = content;
         this.likesCount = 0;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
     @PrePersist

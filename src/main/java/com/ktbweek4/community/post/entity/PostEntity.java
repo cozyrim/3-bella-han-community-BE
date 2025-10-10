@@ -1,7 +1,6 @@
 package com.ktbweek4.community.post.entity;
 
 import com.ktbweek4.community.comment.entity.Comment;
-import com.ktbweek4.community.user.entity.PostImage;
 import com.ktbweek4.community.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -13,8 +12,8 @@ import java.util.List;
 
 @Entity
 @Getter @ Setter
-@Table(name = "Post")
-public class Post {
+@Table(name = "posts")
+public class PostEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // auto_increment
     @Column(name = "post_id")
@@ -35,11 +34,11 @@ public class Post {
 
     // post 1 : N postImage (연결/순서 관리 같이 함)
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PostImage> postImages = new ArrayList<>();
+    private List<PostImageEntity> postImages = new ArrayList<>();
 
     // post 1 : 1 postviewCount
     @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private PostViewCount viewCount;
+    private PostViewCountEntity viewCount;
 
 
 

@@ -8,16 +8,17 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter @Setter
-@Table(
-        name = "UsersLike",
-        uniqueConstraints = {
-                @UniqueConstraint(name = "uq_user_target", columnNames = {"user_id", "target_type", "target_id"})
-        },
-        indexes = {
-                @Index(name = "idx_like_target", columnList = "target_type, target_id"),
-                @Index(name = "idx_like_user", columnList = "user_id")
-        }
-)
+//@Table(
+//        name = "UsersLike",
+//        uniqueConstraints = {
+//                @UniqueConstraint(name = "uq_user_target", columnNames = {"user_id", "target_type", "target_id"})
+//        },
+//        indexes = {
+//                @Index(name = "idx_like_target", columnList = "target_type, target_id"),
+//                @Index(name = "idx_like_user", columnList = "user_id")
+//        }
+//)
+@Table(name = "users_likes")
 public class UsersLike {
 
     @Id
@@ -25,8 +26,9 @@ public class UsersLike {
     @Column(name = "like_id")
     private Long likeId;
 
-    @Column(name = "created_at", insertable = false, columnDefinition = "DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6)", updatable = false)
-    private LocalDateTime createdAt;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     // enum ('POST', 'COMMENT')
     @Enumerated(EnumType.STRING)
@@ -36,17 +38,16 @@ public class UsersLike {
     @Column(name = "target_id", nullable = false)
     private Long targetId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "created_at", insertable = false, columnDefinition = "DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6)", updatable = false)
+    private LocalDateTime createdAt;
 
     protected UsersLike() {}
 
-    public UsersLike(TargetType targetType, Long targetId, User user) {
+    public UsersLike(User user, TargetType targetType, Long targetId) {
+        this.user = user;
         this.targetType = targetType;
         this.targetId = targetId;
-        this.user = user;
-        this.createdAt = LocalDateTime.now();
+        //this.createdAt = LocalDateTime.now();
     }
 
     // Enum 정의

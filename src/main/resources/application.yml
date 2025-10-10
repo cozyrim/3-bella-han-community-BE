@@ -1,17 +1,33 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/community?serverTimezone=UTC&useSSL=false
+    url: jdbc:mysql://localhost:3306/community?serverTimezone=UTC&useSSL=false&useUnicode=true&characterEncoding=utf8
     username: root
     password:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: none   # 개발 중에는 create / create-drop / update 중 선택
+      ddl-auto: update     # 개발용: create / create-drop / update 중 선택
+    show-sql: true
     properties:
       hibernate:
         format_sql: true
+        # ✅ 네이밍 전략은 여기(hibernate.*) 아래에 넣어야 실제로 적용됨
+        physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+
+  doc:
+    api-docs:
+      path: /v3/api-docs
+    swagger-ui:
+      path: /swagger-ui.html
+      enabled: true
 
 logging:
   level:
     org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql: trace   # 바인딩 파라미터까지 출력
+    org.springframework.orm.jpa: debug
+    org.hibernate.tool.hbm2ddl: debug
+    org.hibernate.orm.jdbc.bind: trace
+    org.springframework.security: DEBUG
