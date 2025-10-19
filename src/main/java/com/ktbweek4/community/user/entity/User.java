@@ -15,8 +15,9 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@Table(name = "users") // 실제 디비 ㅔㅌ이블 이름과 매핑
+@Table(name = "users") // 실제 DB 테이블 이름과 매핑
 public class User extends BaseTimeEntity {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // auto_increment
     @Column(name = "user_id")
@@ -36,7 +37,7 @@ public class User extends BaseTimeEntity {
 
     // tinyint(1) -> boolean 으로 매핑 가능
     @Column(name = "is_deleted")
-    private Boolean is_deleted = false;
+    private Boolean isDeleted = false;
 
     @OneToMany(mappedBy = "author")
     private List<PostEntity> posts = new ArrayList<>();

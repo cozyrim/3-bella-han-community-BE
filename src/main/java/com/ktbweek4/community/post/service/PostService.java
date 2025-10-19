@@ -6,7 +6,9 @@ import com.ktbweek4.community.post.dto.*;
 import com.ktbweek4.community.post.entity.PostEntity;
 import com.ktbweek4.community.post.entity.PostImageEntity;
 import com.ktbweek4.community.post.repository.PostRepository;
+import com.ktbweek4.community.user.dto.CustomUserDetails;
 import com.ktbweek4.community.user.entity.User;
+import com.ktbweek4.community.user.service.UserService;
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -25,19 +27,15 @@ public class PostService {
     private final PostRepository postRepository;
     private final LocalFileStorage fileStorage;
     private final EntityManager em;
+    private final UserService userService;
 
-    /** 생성: 제목/내용 + 이미지 업로드 */
+    /** 생성: 제목/내용 + 이미지 업로드 (Spring Security 자동 인증) */
     public PostResponseDTO createPost(PostRequestDTO dto,
                                       List<MultipartFile> images,
-                                      HttpServletRequest request) throws Exception {
+                                      CustomUserDetails userDetails) throws Exception {
 
-        // 1) 로그인 사용자 확인
-        var session = request.getSession(false);
-        if (session == null) throw new IllegalStateException("로그인이 필요합니다.");
-
-        // 게시글을 생성, 작성자의 유저 엔티티가 필요
-        User loginUser = (User) session.getAttribute("LOGIN_USER");
-        if (loginUser == null) throw new IllegalStateException("로그인이 필요합니다.");
+        // 로그인 사용자 조회 (Spring Security가 자동으로 인증 확인)
+        User loginUser = userService.findByIdOrThrow(userDetails.getUserId());
 
         // 2) 게시글 저장
         PostEntity post = PostEntity.builder()
@@ -69,19 +67,14 @@ public class PostService {
         return PostResponseDTO.of(post);
     }
 
-    /** 수정: 제목/내용, 이미지 추가/삭제, 대표 이미지 설정 */
+    /** 수정: 제목/내용, 이미지 추가/삭제, 대표 이미지 설정 (Spring Security 자동 인증) */
     public PostResponseDTO updatePost(Long postId,
                                       PostUpdateRequestDTO dto,
                                       List<MultipartFile> newImages,
-                                      HttpServletRequest request) throws Exception {
+                                      CustomUserDetails userDetails) throws Exception {
 
-        // 1) 로그인 사용자 확인
-        var session = request.getSession(false);
-        if (session == null) throw new IllegalStateException("로그인이 필요합니다.");
-
-        // 게시글 수정, 수정하는 작성자의 유저 엔티티가 필요, 왜냐하면 게시글을 작성한 사람만 수정할 수 있기 때문
-        User loginUser = (User) session.getAttribute("LOGIN_USER");
-        if (loginUser == null) throw new IllegalStateException("로그인이 필요합니다.");
+        // 로그인 사용자 조회 (Spring Security가 자동으로 인증 확인)
+        User loginUser = userService.findByIdOrThrow(userDetails.getUserId());
 
         // 2) 게시글 조회
         PostEntity post = postRepository.findById(postId)
@@ -156,13 +149,10 @@ public class PostService {
         return PostResponseDTO.of(post);
     }
 
-    public void deletePost(Long postId, HttpServletRequest request) {
-        var session = request.getSession(false);
-        if (session == null) throw new IllegalStateException("로그인이 필요합니다.");
-
-        // 작성한 사람만 삭제할 수 있는 보안장치 필요
-        User loginUser = (User) session.getAttribute("LOGIN_USER");
-        if (loginUser == null) throw new IllegalStateException("로그인이 필요합니다.");
+    /** 삭제: 작성자만 삭제 가능 (Spring Security 자동 인증) */
+    public void deletePost(Long postId, CustomUserDetails userDetails) {
+        // 로그인 사용자 조회 (Spring Security가 자동으로 인증 확인)
+        User loginUser = userService.findByIdOrThrow(userDetails.getUserId());
 
         // 게시글 조회
         PostEntity post = postRepository.findById(postId)
@@ -177,9 +167,7 @@ public class PostService {
     }
 
     public PostDetailResponseDTO getPost(Long postId, HttpServletRequest request) {
-        var session = request.getSession(false);
-        if (session == null) throw new IllegalStateException("로그인이 필요합니다.");
-
+        // 게시글 상세 조회는 공개 (인증 불필요)
         PostEntity post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
 

@@ -5,10 +5,12 @@ import com.ktbweek4.community.common.CommonCode;
 import com.ktbweek4.community.common.SliceResponse;
 import com.ktbweek4.community.post.dto.*;
 import com.ktbweek4.community.post.service.PostService;
+import com.ktbweek4.community.user.dto.CustomUserDetails;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,37 +23,37 @@ public class PostController {
 
     private final PostService postService;
 
-    // 게시글 생성
+    // 게시글 생성 (Spring Security 자동 인증)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<PostResponseDTO>> createPost(
             @RequestPart("post") PostRequestDTO postRequestDTO,
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
-            HttpServletRequest request
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) throws Exception {
-        PostResponseDTO savedPost = postService.createPost(postRequestDTO, images, request);
+        PostResponseDTO savedPost = postService.createPost(postRequestDTO, images, userDetails);
         return ApiResponse.success(CommonCode.POST_CREATED, savedPost).toResponseEntity();
     }
 
-    // 게시글 수정 (제목/내용 변경 + 이미지 추가/삭제 + 대표 이미지 설정)
-    @PatchMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // 게시글 수정 (Spring Security 자동 인증)
+    @PatchMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE) 
     public ResponseEntity<ApiResponse<PostResponseDTO>> updatePost(
             @PathVariable Long postId,
             @RequestPart(value = "post", required = false) PostUpdateRequestDTO updateDTO,
             @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages,
-            HttpServletRequest request
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) throws Exception {
         if (updateDTO == null) updateDTO = new PostUpdateRequestDTO();
-        PostResponseDTO updated = postService.updatePost(postId, updateDTO, newImages, request);
+        PostResponseDTO updated = postService.updatePost(postId, updateDTO, newImages, userDetails);
         return ApiResponse.success(CommonCode.POST_UPDATED, updated).toResponseEntity();
     }
 
-    // 게시글 삭제
+    // 게시글 삭제 (Spring Security 자동 인증)
     @DeleteMapping("/{postId}")
     public ResponseEntity<ApiResponse<Void>> deletePost(
             @PathVariable Long postId,
-            HttpServletRequest request
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) throws Exception {
-        postService.deletePost(postId, request);
+        postService.deletePost(postId, userDetails);
         return ApiResponse.<Void>success(CommonCode.POST_DELETED).toResponseEntity();
     }
 
