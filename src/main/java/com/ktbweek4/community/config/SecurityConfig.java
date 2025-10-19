@@ -39,9 +39,12 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 // CSRF 보호: 세션 방식에서는 필수 (JSESSIONID 쿠키 사용)
-                // 프론트엔드에서 X-CSRF-TOKEN 헤더로 토큰 전송 필요
-                // CSRF 토큰을 자동으로 생성해서 프론트에 보내줌
-                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+                // 로그인/회원가입 API는 CSRF 체크 제외 (토큰이 아직 없으므로)
+                // 나머지 API는 X-XSRF-TOKEN 헤더 필수
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .ignoringRequestMatchers("/api/v1/auth/login", "/api/v1/users/signup")
+                )
                 
                 // CORS 설정: 다른 도메인(localhost:5500)에서의 요청 허용
                 // credentials(쿠키) 포함 요청 가능하도록 설정
@@ -58,10 +61,7 @@ public class SecurityConfig {
                 )
 
                 // 폼 로그인 비활성화 (REST API는 JSON으로 로그인 처리)
-                .formLogin(form -> form.disable())
-
-                // HTTP Basic 인증 활성화 (개발/테스트용)
-                .httpBasic(Customizer.withDefaults());
+                .formLogin(form -> form.disable());
 
         return http.build();
     }
@@ -106,6 +106,7 @@ public class SecurityConfig {
         // Preflight 요청 캐시 시간 (초)
         config.setMaxAge(3600L);
 
+        // CORS 설정을 Spring에 등록하는 코드
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);  // 모든 경로에 적용
         return source;
