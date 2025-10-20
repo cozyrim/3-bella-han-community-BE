@@ -18,6 +18,7 @@ public class PostDetailResponseDTO {
     private String title;
     private String content;
     private Long authorId;
+    private String authorNickname; // 작성자 닉네임
 
     private List<ImageInfo> images;
 
@@ -50,6 +51,7 @@ public class PostDetailResponseDTO {
                 .title(post.getTitle())
                 .content(post.getContent())
                 .authorId(post.getAuthor().getUserId())
+                .authorNickname(post.getAuthor().getNickname())
                 .images(imageInfos)
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())

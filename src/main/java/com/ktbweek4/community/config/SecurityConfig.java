@@ -38,13 +38,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // CSRF 보호: 세션 방식에서는 필수 (JSESSIONID 쿠키 사용)
-                // 로그인/회원가입 API는 CSRF 체크 제외 (토큰이 아직 없으므로)
-                // 나머지 API는 X-XSRF-TOKEN 헤더 필수
-                .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .ignoringRequestMatchers("/api/v1/auth/login", "/api/v1/users/signup")
-                )
+                // CSRF 보호 임시 비활성화 (프론트엔드 연동 문제 해결용)
+                .csrf(csrf -> csrf.disable())
                 
                 // CORS 설정: 다른 도메인(localhost:5500)에서의 요청 허용
                 // credentials(쿠키) 포함 요청 가능하도록 설정
@@ -61,7 +56,10 @@ public class SecurityConfig {
                 )
 
                 // 폼 로그인 비활성화 (REST API는 JSON으로 로그인 처리)
-                .formLogin(form -> form.disable());
+                .formLogin(form -> form.disable())
+                
+                // HTTP Basic 인증 비활성화 (세션 방식만 사용)
+                .httpBasic(basic -> basic.disable());
 
         return http.build();
     }

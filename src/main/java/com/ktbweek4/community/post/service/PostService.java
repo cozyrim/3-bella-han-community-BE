@@ -34,8 +34,19 @@ public class PostService {
                                       List<MultipartFile> images,
                                       CustomUserDetails userDetails) throws Exception {
 
+        // 인증 정보 확인 (디버깅)
+        if (userDetails == null) {
+            System.out.println("PostService.createPost - userDetails가 null입니다!");
+            throw new IllegalArgumentException("인증 정보가 없습니다.");
+        }
+
+        System.out.println("PostService.createPost 호출 - userDetails: " + userDetails.getEmail());
+        System.out.println("사용자 ID: " + userDetails.getUserId());
+
         // 로그인 사용자 조회 (Spring Security가 자동으로 인증 확인)
         User loginUser = userService.findByIdOrThrow(userDetails.getUserId());
+        System.out.println("사용자 조회 성공: " + loginUser.getEmail());
+        System.out.println("사용자 닉네임: " + loginUser.getNickname());
 
         // 2) 게시글 저장
         PostEntity post = PostEntity.builder()

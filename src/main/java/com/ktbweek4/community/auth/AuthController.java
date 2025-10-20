@@ -38,15 +38,19 @@ public class AuthController {
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             context.setAuthentication(auth);
             SecurityContextHolder.setContext(context);
-            
-            // ⭐ JSESSIONID 생성: Tomcat이 세션 ID를 자동으로 생성하고 쿠키로 브라우저에 전송
+
+            // JSESSIONID 생성: Tomcat이 세션 ID를 자동으로 생성하고 쿠키로 브라우저에 전송
             HttpSession session = httpRequest.getSession(true);  // true = 세션 없으면 새로 생성
-            
+
             // SecurityContext를 세션에 저장 (이후 요청 시 자동으로 인증 상태 복원)
             session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
-            
+
             // 세션 고정 공격 방지: 로그인 성공 시 세션 ID를 새로 발급 (내용은 유지)
             httpRequest.changeSessionId();
+
+            // 디버깅 로그 (임시)
+            System.out.println("로그인 성공 - 세션 생성됨: " + session.getId());
+            System.out.println("인증 객체 저장됨: " + auth.getName());
 
             // 응답 생성
             CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();

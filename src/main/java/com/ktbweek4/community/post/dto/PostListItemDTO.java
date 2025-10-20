@@ -15,6 +15,7 @@ public class PostListItemDTO {
     private String title;
     private String content;
     private Long authorId;
+    private String authorNickname;
     private String primaryImageUrl; // 대표 이미지(없을 수 있음)
     private LocalDateTime createdAt;
 }
