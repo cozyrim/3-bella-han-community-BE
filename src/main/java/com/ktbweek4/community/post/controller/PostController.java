@@ -1,5 +1,8 @@
 package com.ktbweek4.community.post.controller;
 
+import com.ktbweek4.community.comment.dto.CommentCreateRequestDTO;
+import com.ktbweek4.community.comment.dto.CommentResponseDTO;
+import com.ktbweek4.community.comment.dto.CommentUpdateRequestDTO;
 import com.ktbweek4.community.common.ApiResponse;
 import com.ktbweek4.community.common.CommonCode;
 import com.ktbweek4.community.common.SliceResponse;
@@ -84,5 +87,46 @@ public class PostController {
     ) {
         var slice = postService.getPostsSlice(cursor, Math.min(size, 5));
         return ApiResponse.success(CommonCode.SUCCESS, slice).toResponseEntity();
+    }
+
+
+    // 댓글 생성
+    @PostMapping("/comments")
+    public ResponseEntity<ApiResponse<CommentResponseDTO>> addComment(
+            @RequestBody CommentCreateRequestDTO commentCreateRequestDTO,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails)
+            throws Exception {
+        CommentResponseDTO savedComment = postService.createComment(commentCreateRequestDTO, customUserDetails);
+        return ApiResponse.success(CommonCode.COMMENT_CREATED, savedComment).toResponseEntity();
+
+    }
+
+    // 댓글 수정
+    @PatchMapping("/comments/{commentId}")
+    public ResponseEntity<ApiResponse<CommentResponseDTO>> updateComment(
+
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody CommentUpdateRequestDTO commentUpdateRequestDTO) throws Exception {
+        CommentResponseDTO updatedComment = postService.updateComment(commentId, commentUpdateRequestDTO, userDetails);
+        return ApiResponse.success(CommonCode.COMMENT_UPDATED, updatedComment).toResponseEntity();
+    }
+
+    // 댓글 삭제
+    @DeleteMapping("/comments/{commentId}")
+    public ResponseEntity<ApiResponse<Void>> deleteComment(
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) throws Exception {
+        postService.deleteComment(commentId, userDetails);
+        return ApiResponse.<Void>success(CommonCode.COMMENT_DELETED).toResponseEntity();
+    }
+
+    // 댓글 목록 조회
+    @GetMapping("/{postId}/comments")
+    public ResponseEntity<ApiResponse<List<CommentResponseDTO>>> getCommentList(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) throws Exception {
+        List<CommentResponseDTO> getComment = postService.getCommentList(postId, userDetails);
+        return ApiResponse.success(CommonCode.COMMENT_VIEW, getComment).toResponseEntity();
     }
 }

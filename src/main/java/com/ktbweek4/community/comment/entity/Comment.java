@@ -1,17 +1,20 @@
 package com.ktbweek4.community.comment.entity;
 
+import com.ktbweek4.community.common.BaseTimeEntity;
 import com.ktbweek4.community.post.entity.PostEntity;
 import com.ktbweek4.community.user.entity.User;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+
 @Entity
 @Getter @ Setter
 @Table(name = "comments")
-public class Comment {
+public class Comment extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "comment_id")
@@ -48,6 +51,7 @@ public class Comment {
 
     protected Comment() {}
 
+    @Builder
     public Comment(User author, PostEntity post, String content) {
         this.author = author;
         this.post = post;

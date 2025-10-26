@@ -45,6 +45,7 @@ public enum CommonCode {
     COMMENT_UPDATED("CM204", "댓글이 수정되었습니다.", HttpStatus.OK),
     COMMENT_DELETED("CM205", "댓글이 삭제되었습니다.", HttpStatus.OK),
     COMMENT_NOT_FOUND("CM404", "댓글을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    COMMENT_VIEW("CM206", "댓글 조회 성공했습니다.", HttpStatus.OK),
 
     /* ====== Like 관련 코드 ====== */
     LIKE_ADDED("L201", "좋아요가 추가되었습니다.", HttpStatus.CREATED),
