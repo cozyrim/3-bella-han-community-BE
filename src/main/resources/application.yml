@@ -12,9 +12,12 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        # ✅ 네이밍 전략은 여기(hibernate.*) 아래에 넣어야 실제로 적용됨
+        # 네이밍 전략은 여기(hibernate.*) 아래에 넣어야 실제로 적용됨
         physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+
+  thymeleaf:
+    cache: false
 
   doc:
     api-docs:

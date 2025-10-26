@@ -43,6 +43,7 @@ public class PostEntity extends BaseTimeEntity {
     // post 1 : N comment (글 삭제 시 댓글도 함께 제거)
     @Builder.Default
     @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OrderBy("createdAt ASC") // 댓글 리스트 항상 오래된 순으로 정렬해서 로딩
     private List<Comment> comments = new ArrayList<>();
 
     // post 1 : N postImage (연결/순서 관리 같이 함)

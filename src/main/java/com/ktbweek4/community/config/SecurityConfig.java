@@ -31,9 +31,13 @@ public class SecurityConfig {
     // 인증 없이 접근 가능한 공개 API 목록
     private static final String[] PUBLIC_URLS = {
             "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
+            "/", "/terms", "/privacy", "/css/**", "/js/**", "/images/**",
             "/api/v1/auth/login", "/api/v1/users/signup", 
             "/files/**", "/api/v1/debug/csrf",
-            "/api/v1/comments"
+            "/api/v1/posts/",
+
+
+
     };
 
     @Bean
