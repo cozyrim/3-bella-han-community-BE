@@ -17,6 +17,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // http://localhost:8080/files/abc.jpg  →  {uploadDir}/abc.jpg
         registry.addResourceHandler("/files/**")
                 .addResourceLocations("file:" + uploadDir + "/")
+
                 .setCachePeriod(3600); // 선택: 캐시 1시간
     }
 }
