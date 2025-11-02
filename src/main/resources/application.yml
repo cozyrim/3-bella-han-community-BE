@@ -40,6 +40,10 @@ logging:
     org.hibernate.orm.jdbc.bind: trace
     org.springframework.security: DEBUG
 
+jwt:
+  secret: dGhpc2lzbXlzdXBlcnNlY3JldGtleTEyMzQ1Njc4OTAxMjM0NTY3ODkw  # base64 인코딩된 32바이트 이상 키
+  expiration: 3600000 # 1시간 (ms)
+
 app:
   upload:
     dir: /Users/chaerim/workspace/ktb3-cloudnative/week4=community-backend/community-backend/uploads   # ← 실제 프로젝트 경로
