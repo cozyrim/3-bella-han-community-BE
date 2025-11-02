@@ -35,3 +35,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# macOS system files
+.DS_Store
+
+# uploaded files (local only)
+uploads/
