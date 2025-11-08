@@ -54,5 +54,5 @@ security:
 
 app:
   upload:
-    dir: /Users/chaerim/workspace/ktb3-cloudnative/week4=community-backend/community-backend/uploads   # ← 실제 프로젝트 경로
+    dir: /Users/chaerim/workspace/ktb3-cloudnative/week4-community-backend/community-backend/uploads   # ← 실제 프로젝트 경로
     public-base-url: http://localhost:8080/files      # 정적 리소스 핸들러와 맞춰 사용

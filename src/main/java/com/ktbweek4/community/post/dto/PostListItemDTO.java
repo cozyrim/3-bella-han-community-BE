@@ -17,7 +17,7 @@ public class PostListItemDTO {
     private Long authorId;
     private long viewCount;
     private Integer likesCount;
-    private Integer commentsCount;
+    private Long commentsCount;
     private String authorNickname;
     private String primaryImageUrl; // 대표 이미지(없을 수 있음)
     private LocalDateTime createdAt;

@@ -1,10 +1,12 @@
 package com.ktbweek4.community.post.repository.impl;
 
+import com.ktbweek4.community.comment.entity.QComment;
 import com.ktbweek4.community.post.dto.PostListItemDTO;
 import com.ktbweek4.community.post.entity.QPostEntity;
 import com.ktbweek4.community.post.entity.QPostImageEntity;
 import com.ktbweek4.community.post.repository.CustomPostRepository;
 import com.querydsl.core.types.Projections;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -24,7 +26,7 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
     public List<PostListItemDTO> fetchSliceByCursor(Long cursorPostId, int size) {
         QPostEntity post = QPostEntity.postEntity;
         QPostImageEntity image = QPostImageEntity.postImageEntity;
-
+        QComment comment = QComment.comment;
         // 대표 이미지 선택 규칙:
         // 1) isPrimary = true 우선
         // 2) 없으면 orderIndex 최솟값 한 장
@@ -39,7 +41,9 @@ public class CustomPostRepositoryImpl implements CustomPostRepository {
                         post.author.userId,
                         post.viewCount,
                         post.likesCount,
-                        post.commentsCount,
+                        JPAExpressions.select(comment.count())
+                                .from(comment)
+                                .where(comment.post.eq(post)),
                         post.author.nickname,
                         image.postImageUrl, // 대표 이미지일 때만 값 나옴
                         post.createdAt

@@ -74,6 +74,7 @@ public class PostController {
 
         Long currentUserId = (userDetails != null) ? userDetails.getUser().getUserId() : null;
         PostDetailResponseDTO getPost = postService.getPost(postId, currentUserId);
+
         return ApiResponse.success(CommonCode.POST_VIEW, getPost).toResponseEntity();
     }
 
@@ -94,33 +95,35 @@ public class PostController {
 
 
     // 댓글 생성
-    @PostMapping("/comments")
+    @PostMapping("/{postId}/comments")
     public ResponseEntity<ApiResponse<CommentResponseDTO>> addComment(
+            @PathVariable Long postId,
             @RequestBody CommentCreateRequestDTO commentCreateRequestDTO,
             @AuthenticationPrincipal CustomUserDetails customUserDetails)
             throws Exception {
-        CommentResponseDTO savedComment = postService.createComment(commentCreateRequestDTO, customUserDetails);
+        CommentResponseDTO savedComment = postService.createComment(postId, commentCreateRequestDTO, customUserDetails);
         return ApiResponse.success(CommonCode.COMMENT_CREATED, savedComment).toResponseEntity();
 
     }
 
     // 댓글 수정
-    @PatchMapping("/comments/{commentId}")
+    @PutMapping("/{postId}/comments/{commentId}")
     public ResponseEntity<ApiResponse<CommentResponseDTO>> updateComment(
-
+            @PathVariable Long postId,
             @PathVariable Long commentId,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody CommentUpdateRequestDTO commentUpdateRequestDTO) throws Exception {
-        CommentResponseDTO updatedComment = postService.updateComment(commentId, commentUpdateRequestDTO, userDetails);
+        CommentResponseDTO updatedComment = postService.updateComment(postId, commentId, commentUpdateRequestDTO, userDetails);
         return ApiResponse.success(CommonCode.COMMENT_UPDATED, updatedComment).toResponseEntity();
     }
 
     // 댓글 삭제
-    @DeleteMapping("/comments/{commentId}")
+    @DeleteMapping("/{postId}/comments/{commentId}")
     public ResponseEntity<ApiResponse<Void>> deleteComment(
+            @PathVariable Long postId,
             @PathVariable Long commentId,
             @AuthenticationPrincipal CustomUserDetails userDetails) throws Exception {
-        postService.deleteComment(commentId, userDetails);
+        postService.deleteComment(postId, commentId, userDetails);
         return ApiResponse.<Void>success(CommonCode.COMMENT_DELETED).toResponseEntity();
     }
 

@@ -26,6 +26,8 @@ public class PostDetailResponseDTO {
     private Long likesCount; // 좋아요 개수
     private Boolean likedByMe; // 로그인 사용자가 누른 상태인지 여부
 
+    private Integer commentsCount;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -38,7 +40,7 @@ public class PostDetailResponseDTO {
         private Boolean isPrimary;
     }
 
-    public static PostDetailResponseDTO of(PostEntity post, boolean likedByMe, long likesCount) {
+    public static PostDetailResponseDTO of(PostEntity post, boolean likedByMe, long likesCount, int commentsCount) {
         List<PostDetailResponseDTO.ImageInfo> imageInfos = post.getPostImages().stream()
                 .sorted(Comparator.comparing(PostImageEntity::getOrderIndex,
                         Comparator.nullsLast(Byte::compare)))
@@ -60,6 +62,7 @@ public class PostDetailResponseDTO {
                 .viewCount(post.getViewCount())
                 .likesCount(likesCount)
                 .likedByMe(likedByMe)
+                .commentsCount(commentsCount)
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();

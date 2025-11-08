@@ -17,11 +17,15 @@ public class UserResponseDTO {
     private String userProfileUrl;
 
     public static UserResponseDTO of(User user) {
+        String url = user.getUserProfileUrl();
+        if (url == null || url.isBlank()) {
+            url = "http://localhost:8080/files/avatar-default.png";
+        }
         return UserResponseDTO.builder()
                 .userId(user.getUserId())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
-                .userProfileUrl(user.getUserProfileUrl())
+                .userProfileUrl(url)
                 .build();
     }
 }

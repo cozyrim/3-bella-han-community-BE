@@ -203,8 +203,8 @@ public class PostService {
         }
 
         long likesCount = postLikeRepository.countByPost_PostId(postId);
-
-        return PostDetailResponseDTO.of(post, likedByMe, likesCount);
+        int commentsCount = commentRepository.countByPost_PostId(postId);
+        return PostDetailResponseDTO.of(post, likedByMe, likesCount, commentsCount);
     }
 
     public SliceResponse<PostListItemDTO> getPostsSlice(Long cursor, int size) {
@@ -230,7 +230,8 @@ public class PostService {
 
 
     // 댓글 생성
-    public CommentResponseDTO createComment(CommentCreateRequestDTO commentCreateRequestDTO,
+    public CommentResponseDTO createComment(Long postId,
+                                            CommentCreateRequestDTO commentCreateRequestDTO,
                                             CustomUserDetails userDetails) throws Exception {
         // 인증 정보 확인
         if (userDetails == null) {
@@ -245,7 +246,7 @@ public class PostService {
         System.out.println("사용자 조회 성공: " + loginUser.getEmail());
         System.out.println("사용자 닉네임: " + loginUser.getNickname());
 
-        PostEntity post = postRepository.findById(commentCreateRequestDTO.postId())
+        PostEntity post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다."));
 
         Comment comment = CommentCreateRequestDTO.toEntity(loginUser, post, commentCreateRequestDTO.content());
@@ -255,7 +256,8 @@ public class PostService {
     }
 
     // 댓글 수정
-    public CommentResponseDTO updateComment(Long commentId,
+    public CommentResponseDTO updateComment(Long postId,
+                                            Long commentId,
                                             CommentUpdateRequestDTO commentUpdateRequestDTO,
                                             CustomUserDetails userDetails) throws Exception {
 
@@ -266,8 +268,11 @@ public class PostService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
 
+        if (!comment.getPost().getPostId().equals(postId)) {
+            throw new IllegalArgumentException("게시글과 댓글이 일치하지 않습니다.");
+        }
         if (!comment.getAuthor().getUserId().equals(loginUser.getUserId())) {
-            throw new IllegalArgumentException("댓글 작성자만 수정할 수 있습니다.");
+            throw new IllegalArgumentException("작성자만 수정할 수 있습니다.");
         }
 
         comment.setContent(commentUpdateRequestDTO.content());
@@ -276,7 +281,7 @@ public class PostService {
 
     }
     // 댓글 삭제
-    public void deleteComment(Long commentId, CustomUserDetails userDetails) throws Exception {
+    public void deleteComment(Long postId, Long commentId, CustomUserDetails userDetails) throws Exception {
         // 로그인 사용자 조회 (Spring Security가 자동으로 인증 확인)
         User loginUser = userService.findByIdOrThrow(userDetails.getUserId());
 
@@ -284,8 +289,11 @@ public class PostService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
 
+        if (!comment.getPost().getPostId().equals(postId)) {
+            throw new IllegalArgumentException("게시글과 댓글이 일치하지 않습니다.");
+        }
         if (!comment.getAuthor().getUserId().equals(loginUser.getUserId())) {
-            throw new IllegalArgumentException("댓글 작성자만 수정할 수 있습니다.");
+            throw new IllegalArgumentException("작성자만 삭제할 수 있습니다.");
         }
         commentRepository.deleteById(comment.getCommentId());
     }
