@@ -6,7 +6,7 @@ import com.ktbweek4.community.comment.dto.CommentUpdateRequestDTO;
 import com.ktbweek4.community.comment.entity.Comment;
 import com.ktbweek4.community.comment.repository.CommentRepository;
 import com.ktbweek4.community.common.SliceResponse;
-import com.ktbweek4.community.file.LocalFileStorage;
+import com.ktbweek4.community.file.S3FileStorage;
 import com.ktbweek4.community.post.dto.*;
 import com.ktbweek4.community.post.entity.PostEntity;
 import com.ktbweek4.community.post.entity.PostImageEntity;
@@ -18,7 +18,6 @@ import com.ktbweek4.community.user.service.UserService;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -34,10 +33,10 @@ public class PostService {
 
     private final PostLikeRepository postLikeRepository;
     private final PostRepository postRepository;
-    private final LocalFileStorage fileStorage;
     private final EntityManager em;
     private final UserService userService;
 
+    private final S3FileStorage fileStorage;
     private final CommentRepository commentRepository;
 
     @PersistenceContext
@@ -77,7 +76,7 @@ public class PostService {
             for (MultipartFile img : images) {
                 if (img == null || img.isEmpty()) continue;
 
-                var stored = fileStorage.save(img); // 로컬 저장 + 공개 URL
+                var stored = fileStorage.save(img, "post"); // 로컬 저장 + 공개 URL
                 PostImageEntity image = PostImageEntity.builder()
                         .postImageUrl(stored.publicUrl())
                         .orderIndex(order)
@@ -138,7 +137,7 @@ public class PostService {
             for (MultipartFile img : newImages) {
                 if (img == null || img.isEmpty()) continue;
 
-                var stored = fileStorage.save(img);
+                var stored = fileStorage.save(img,  "post");
 
                 PostImageEntity image = PostImageEntity.builder()
                         .postImageUrl(stored.publicUrl())

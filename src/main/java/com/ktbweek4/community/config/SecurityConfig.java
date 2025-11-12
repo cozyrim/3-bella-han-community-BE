@@ -49,15 +49,20 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_URLS).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // auth 관련 (두 버전)
+
+                        // 업로드(파일) 엔드포인트 허용 (테스트용)
+                        .requestMatchers(HttpMethod.POST, "/api/files/upload").permitAll()
+                        // 필요하면 업로드 결과 확인용 GET도 열 수 있음
+                        .requestMatchers(HttpMethod.GET, "/api/files/**").permitAll()
+
+                        // auth 공개 (두 버전 지원)
                         .requestMatchers("/v1/auth/refresh", "/api/v1/auth/refresh").permitAll()
                         .requestMatchers("/v1/auth/logout",  "/api/v1/auth/logout").permitAll()
+                        .requestMatchers("/api/v1/auth/refresh", "/api/v1/auth/logout").permitAll()
 
                         // 게시글 목록/상세 공개 (두 버전)
                         .requestMatchers(HttpMethod.GET, "/v1/posts/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/posts/**").permitAll()
-
-                        .requestMatchers("/api/v1/auth/refresh", "/api/v1/auth/logout").permitAll()
 
                         .anyRequest().authenticated()
                 )

@@ -5,6 +5,9 @@ spring:
     password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  config:
+    import: optional:file:.env[.properties]
+
   jpa:
     hibernate:
       ddl-auto: ${JPA_DDL_AUTO:update}
@@ -12,23 +15,32 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        # ↙︎ 아래 두 줄이 적용되어야 column명이 camelCase 그대로 사용됩니다.
         physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
 
   thymeleaf:
     cache: ${THYMELEAF_CACHE:false}
 
-  doc:
-    api-docs:
-      path: /v3/api-docs
-    swagger-ui:
-      path: /swagger-ui.html
-      enabled: ${SWAGGER_ENABLED:true}
-
   servlet:
     multipart:
       max-file-size: ${MULTIPART_MAX_FILE_SIZE:50MB}
       max-request-size: ${MULTIPART_MAX_REQUEST_SIZE:50MB}
+
+springdoc:         # ← 'doc' 아님!
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: ${SWAGGER_ENABLED:true}
+
+aws:
+  region: ${AWS_REGION}
+  s3:
+    bucket: ${S3_BUCKET_NAME}
+    public-base-url: ${S3_PUBLIC_BASE_URL}
+    key-prefix: ${S3_KEY_PREFIX:}
+    default-avatar-url: ${DEFAULT_AVATAR_URL}
 
 logging:
   level:

@@ -18,20 +18,25 @@ public class RefreshToken {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name="expiresAt", nullable=false)
+    private Instant expiresAt;
+
+    @Column(nullable=false, length=50, unique=true)
+    private String jti;
+
+    @Column(nullable=false)
+    private boolean revoked = false;
+
     @Column(nullable=false, unique=true, length=190)
     private String tokenHash;   // 원문 저장 X, SHA-256 등 해시만 저장
 
     @Column(nullable=false)
     private Long userId;
 
-    @Column(nullable=false, length=50, unique=true)
-    private String jti;         // 고유 식별자
 
-    @Column(nullable=false)
-    private Instant expiresAt;
 
-    @Column(nullable=false)
-    private boolean revoked = false;
+
+
 
     // getters/setters/constructors ...
 }
