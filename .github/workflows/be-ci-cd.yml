@@ -35,7 +35,7 @@ jobs:
         run: |
           docker buildx create --use
           docker buildx build --platform linux/amd64 \
-            -t ${{ secrets.REGISTRY_URL }}/backend:latest \
+            -t "${{ secrets.REGISTRY_URL }}/backend:latest" \
             --push .
 
   deploy:
