@@ -1,22 +1,26 @@
+// src/main/java/com/ktbweek4/community/auth/AuthController.java
 package com.ktbweek4.community.auth;
 
+import com.ktbweek4.community.auth.entity.RefreshToken;
+import com.ktbweek4.community.auth.repository.RefreshTokenRepository;
+import com.ktbweek4.community.auth.util.CookieUtil;
+import com.ktbweek4.community.auth.util.TokenHash;
+import com.ktbweek4.community.auth.jwt.JwtTokenProvider;
 import com.ktbweek4.community.common.ApiResponse;
 import com.ktbweek4.community.common.CommonCode;
 import com.ktbweek4.community.user.dto.CustomUserDetails;
 import com.ktbweek4.community.user.dto.LoginRequestDTO;
 import com.ktbweek4.community.user.dto.UserResponseDTO;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.servlet.http.HttpServletResponse;
+import java.time.Instant;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -24,58 +28,55 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final RefreshTokenRepository refreshTokenRepository;
 
-    // 로그인: Spring Security 자동 인증 사용
+    @Value("${security.cookie.domain}") private String cookieDomain;
+    @Value("${security.cookie.path}") private String cookiePath;
+    @Value("${security.cookie.secure:false}") private boolean cookieSecure;
+    @Value("${security.cookie.same-site:Lax}") private String cookieSameSite;
+    // refresh Max-Age는 yml의 refresh-expiration(ms) / 1000로 맞춰도 됨
+    @Value("${jwt.refresh-expiration}") private long refreshValidityMs;
+
+    public static final String REFRESH_COOKIE = "REFRESH_TOKEN";
+
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<UserResponseDTO>> login(@RequestBody LoginRequestDTO request, HttpServletRequest httpRequest) {
-        try {
-            // 인증 시도 (DB 조회 + 비밀번호 검증 자동 수행)
-            Authentication auth = authenticationManager.authenticate(
+    public ResponseEntity<ApiResponse<LoginResponse>> login(
+            @RequestBody LoginRequestDTO request,
+            HttpServletResponse response
+    ) {
+        var auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-            );
+        );
+        var user = (CustomUserDetails) auth.getPrincipal();
 
-            // SecurityContext에 인증 정보 저장
-            SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(auth);
-            SecurityContextHolder.setContext(context);
+        // 1) Access
+        String access = jwtTokenProvider.generateAccessToken(user);
 
-            // JSESSIONID 생성: Tomcat이 세션 ID를 자동으로 생성하고 쿠키로 브라우저에 전송
-            HttpSession session = httpRequest.getSession(true);  // true = 세션 없으면 새로 생성
+        // 2) Refresh (jti 생성 → 토큰 생성 → 해시 저장)
+        String jti = jwtTokenProvider.newJti();
+        String refresh = jwtTokenProvider.generateRefreshToken(user, jti);
 
-            // SecurityContext를 세션에 저장 (이후 요청 시 자동으로 인증 상태 복원)
-            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+        var rt = new RefreshToken();
+        rt.setUserId(user.getUser().getUserId());
+        rt.setJti(jti);
+        rt.setTokenHash(TokenHash.sha256(refresh));
+        rt.setExpiresAt(jwtTokenProvider.getExpiryInstant(refresh));
+        rt.setRevoked(false);
+        refreshTokenRepository.save(rt);
 
-            // 세션 고정 공격 방지: 로그인 성공 시 세션 ID를 새로 발급 (내용은 유지)
-            httpRequest.changeSessionId();
+        // 3) HttpOnly 쿠키에 저장
+        CookieUtil.addHttpOnlyCookie(
+                response, REFRESH_COOKIE, refresh,
+                cookieDomain, cookiePath, cookieSecure, cookieSameSite,
+                (int)(refreshValidityMs / 1000)
+        );
 
-            // 디버깅 로그 (임시)
-            System.out.println("로그인 성공 - 세션 생성됨: " + session.getId());
-            System.out.println("인증 객체 저장됨: " + auth.getName());
-
-            // 응답 생성
-            CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-            UserResponseDTO response = UserResponseDTO.builder()
-                    .userId(userDetails.getUserId())
-                    .email(userDetails.getEmail())
-                    .nickname(userDetails.getNickname())
-                    .build();
-
-            return ApiResponse.success(CommonCode.LOGIN_SUCCESS, response).toResponseEntity();
-
-        } catch (BadCredentialsException e) {
-            return ApiResponse.<UserResponseDTO>error(CommonCode.USER_INVALID_PASSWORD).toResponseEntity();
-        } catch (Exception e) {
-            return ApiResponse.<UserResponseDTO>error(CommonCode.UNAUTHORIZED).toResponseEntity();
-        }
+        var body = new LoginResponse(UserResponseDTO.of(user.getUser()), access);
+        return ApiResponse
+                .success(CommonCode.LOGIN_SUCCESS, body)
+                .toResponseEntityWithHeaders(Map.of("Authorization", "Bearer " + access));
     }
 
-    // 로그아웃: 세션 무효화
-    @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate();
-        }
-        return ApiResponse.<Void>success(CommonCode.LOGOUT_SUCCESS).toResponseEntity();
-    }
+    public record LoginResponse(UserResponseDTO user, String accessToken) {}
 }

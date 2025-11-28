@@ -7,6 +7,8 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Map;
+
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
@@ -72,5 +74,14 @@ public class ApiResponse<T> {
     /*  ResponseEntity 변환 */
     public ResponseEntity<ApiResponse<T>> toResponseEntity() {
         return ResponseEntity.status(this.httpStatus).body(this);
+    }
+
+    // ApiResponse<T>
+    public ResponseEntity<ApiResponse<T>> toResponseEntityWithHeaders(Map<String, String> headers) {
+        ResponseEntity.BodyBuilder builder = ResponseEntity.status(this.httpStatus);
+        if (headers != null) {
+            headers.forEach(builder::header);
+        }
+        return builder.body(this);
     }
 }

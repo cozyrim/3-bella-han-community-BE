@@ -1,0 +1,62 @@
+name: BE CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout backend code
+        uses: actions/checkout@v3
+
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build JAR
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean build -x test
+
+      - name: Docker Login (Private Registry)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.REGISTRY_URL }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build Docker Image
+        run: |
+          docker build -t ${{ secrets.REGISTRY_URL }}/backend:latest .
+
+      - name: Push Docker Image
+        run: |
+          docker push ${{ secrets.REGISTRY_URL }}/backend:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          
+          # 바스티온 known_hosts 등록
+          ssh-keyscan ${{ secrets.BASTION_HOST }} >> ~/.ssh/known_hosts
+
+      # 바스티온 -> 백엔드 프라이빗 서버로 ProxyJump
+      - name: Deploy Backend via Bastion Proxy
+        run: |
+          ssh -o StrictHostsKeyChecking=no \
+          -o ProxyJump=ubuntu@${{ secrets.BASTION_HOST }} \
+              ubuntu@${{ secrets.BE_PRIVATE_IP }} \
+              "cd /home/ubuntu && docker-compose pull backend && docker-compose up -d backend"

@@ -6,7 +6,9 @@ import com.ktbweek4.community.user.dto.CustomUserDetails;
 import com.ktbweek4.community.user.dto.UserRequestDTO;
 import com.ktbweek4.community.user.dto.UserResponseDTO;
 import com.ktbweek4.community.user.dto.UserSignupForm;
+import com.ktbweek4.community.user.entity.User;
 import com.ktbweek4.community.user.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,7 +32,7 @@ public class UserController {
     
     // 회원가입 (FormData - 프로필 사진 포함)
     @PostMapping(value = "/signup", consumes = "multipart/form-data")
-    public ResponseEntity<ApiResponse<UserResponseDTO>> signupWithProfile(@ModelAttribute UserSignupForm form) {
+    public ResponseEntity<ApiResponse<UserResponseDTO>> signupWithProfile(@Valid @ModelAttribute UserSignupForm form) {
 
         
         UserResponseDTO saved = userService.createWithProfile(
@@ -62,12 +64,8 @@ public class UserController {
             return ApiResponse.<UserResponseDTO>error(CommonCode.UNAUTHORIZED).toResponseEntity();
         }
 
-        UserResponseDTO response = UserResponseDTO.builder()
-                .userId(userDetails.getUserId())
-                .email(userDetails.getEmail())
-                .nickname(userDetails.getNickname())
-                .build();
+        User user = userService.findByIdOrThrow(userDetails.getUserId());
 
-        return ApiResponse.success(CommonCode.SUCCESS, response).toResponseEntity();
+        return ApiResponse.success(CommonCode.SUCCESS, UserResponseDTO.of(user)).toResponseEntity();
     }
 }

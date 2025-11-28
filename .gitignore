@@ -41,3 +41,7 @@ out/
 
 # uploaded files (local only)
 uploads/
+
+.env
+.env.local
+.env.prod
