@@ -31,12 +31,13 @@ jobs:
           username: ${{ secrets.REGISTRY_USER }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Build and Push Docker Image (buildx)
+      - name: Build Docker Image (multi-stage)
         run: |
-          docker buildx create --use
-          docker buildx build --platform linux/amd64 \
-            -t "${{ secrets.REGISTRY_URL }}/backend:latest" \
-            --push .
+          docker build -t ${{ secrets.REGISTRY_URL }}/backend:latest .
+
+      - name: Push Docker Image
+        run: |
+          docker push ${{ secrets.REGISTRY_URL }}/backend:latest
 
   deploy:
     needs: build-and-push
@@ -50,9 +51,8 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan ${{ secrets.BASTION_HOST }} >> ~/.ssh/known_hosts
 
+      # 프록시점프 → 백엔드 EC2
       - name: Deploy Backend via Bastion Proxy
         run: |
-          ssh -o StrictHostsKeyChecking=no \
-          -o ProxyJump=ubuntu@${{ secrets.BASTION_HOST }} \
-              ubuntu@${{ secrets.BE_PRIVATE_IP }} \
-              "cd /home/ubuntu && docker-compose pull backend && docker-compose up -d backend"
+          ssh -o ProxyJump=ubuntu@${{ secrets.BASTION_HOST }} ubuntu@${{ secrets.BE_PRIVATE_IP }} \
+          "cd /home/ubuntu && docker-compose pull backend && docker-compose up -d backend"
