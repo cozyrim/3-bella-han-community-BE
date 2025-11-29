@@ -49,10 +49,24 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan ${{ secrets.BASTION_HOST }} >> ~/.ssh/known_hosts
-
-      # 프록시점프 → 백엔드 EC2
-      - name: Deploy Backend via Bastion Proxy
+          
+      - name: Add Bastion and Backend to known_hosts
         run: |
-          ssh -o ProxyJump=ubuntu@${{ secrets.BASTION_HOST }} ubuntu@${{ secrets.BE_PRIVATE_IP }} \
-          "cd /home/ubuntu && docker-compose pull backend && docker-compose up -d backend"
+          mkdir -p ~/.ssh
+
+          ssh-keyscan -H ${{ secrets.BASTION_HOST }} >> ~/.ssh/known_hosts
+
+          ssh -o StrictHostKeyChecking=no \
+            -o ProxyJump=ubuntu@${{ secrets.BASTION_HOST }} \
+            ubuntu@${{ secrets.BE_PRIVATE_IP }} "exit" || true
+
+          ssh-keyscan -H ${{ secrets.BE_PRIVATE_IP }} >> ~/.ssh/known_hosts
+
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy Backend via Bastion
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+            -o ProxyJump=ubuntu@${{ secrets.BASTION_HOST }} \
+            ubuntu@${{ secrets.BE_PRIVATE_IP }} \
+            "cd /home/ubuntu && docker-compose pull backend && docker-compose up -d backend"
