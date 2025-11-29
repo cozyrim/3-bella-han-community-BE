@@ -95,4 +95,4 @@ jobs:
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
           -o ProxyJump=ubuntu@${{ secrets.BASTION_IP }} \
           ubuntu@${{ secrets.BACKEND_IP }} \
-          "cd /home/ubuntu && docker-compose pull backend && docker-compose up -d backend"
+          "cd /home/ubuntu && docker compose pull backend && docker compose up -d backend"
