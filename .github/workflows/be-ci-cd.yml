@@ -59,6 +59,19 @@ jobs:
           mkdir -p ~/.ssh
 
           ssh-keyscan -H ${{ secrets.BASTION_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H $BACKEND_IP >> ~/.ssh/known_hosts
+
+      # --- ✨ SSH 테스트 (여기에 넣어야 함!!) -----------------------
+      - name: Test SSH to Bastion
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@$BASTION_IP "echo BASTION OK"
+
+      - name: Test SSH Jump to Backend
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no \
+          -o ProxyJump=ubuntu@$BASTION_IP \
+          ubuntu@$BACKEND_IP "echo BACKEND OK"
+
 
           ssh -o StrictHostKeyChecking=no \
             -o ProxyJump=ubuntu@${{ secrets.BASTION_HOST }} \
