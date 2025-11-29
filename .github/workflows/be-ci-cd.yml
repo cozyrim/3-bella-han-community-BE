@@ -44,11 +44,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup SSH Key
+      - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          echo "${SSH_KEY}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_ed25519
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
           
       - name: Add Bastion and Backend to known_hosts
         run: |
@@ -70,3 +74,5 @@ jobs:
             -o ProxyJump=ubuntu@${{ secrets.BASTION_HOST }} \
             ubuntu@${{ secrets.BE_PRIVATE_IP }} \
             "cd /home/ubuntu && docker-compose pull backend && docker-compose up -d backend"
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
