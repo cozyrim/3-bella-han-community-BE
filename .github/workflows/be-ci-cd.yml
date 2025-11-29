@@ -54,12 +54,31 @@ jobs:
         env:
           SSH_KEY: ${{ secrets.SSH_KEY }}
           
+      # - name: Add Bastion and Backend to known_hosts
+      #   run: |
+      #     mkdir -p ~/.ssh
+
+      #     ssh-keyscan -H ${{ secrets.BASTION_HOST }} >> ~/.ssh/known_hosts
+          
+
+
       - name: Add Bastion and Backend to known_hosts
+        env:
+          BASTION_IP: ${{ secrets.BASTION_IP }}
+          BACKEND_IP: ${{ secrets.BACKEND_IP }}
         run: |
           mkdir -p ~/.ssh
 
-          ssh-keyscan -H ${{ secrets.BASTION_HOST }} >> ~/.ssh/known_hosts
+          echo "🔍 ssh-keyscan bastion ($BASTION_IP)"
+          ssh-keyscan -H $BASTION_IP >> ~/.ssh/known_hosts
+
+          echo "🔍 ssh-keyscan backend ($BACKEND_IP)"
           ssh-keyscan -H $BACKEND_IP >> ~/.ssh/known_hosts
+
+
+
+
+
 
       # --- ✨ SSH 테스트 (여기에 넣어야 함!!) -----------------------
       - name: Test SSH to Bastion
