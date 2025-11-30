@@ -52,47 +52,33 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
+
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_ed25519
 
       # -------------------------
-      # known_hosts 등록 (Bastion + Backend)
-      # Backend는 Private IP 이므로 Bastion 경유로 추가!
+      # known_hosts 등록 
       # -------------------------
-      # - name: Add Bastion and Backend to known_hosts
-      #   env:
-      #     BASTION_IP: ${{ secrets.BASTION_IP }}
-      #     BACKEND_IP: ${{ secrets.BACKEND_IP }}
-      #   run: |
-      #     mkdir -p ~/.ssh
-
-      #     echo "🔍 ssh-keyscan bastion: $BASTION_IP"
-      #     ssh-keyscan -H $BASTION_IP >> ~/.ssh/known_hosts
-
-      #     echo "🔍 ssh-keyscan backend via bastion"
-      #     ssh-keyscan -H -t rsa \
-      #       -o "ProxyCommand=ssh -W %h:%p -i ~/.ssh/id_ed25519 ubuntu@$BASTION_IP" \
-      #       $BACKEND_IP >> ~/.ssh/known_hosts
-
-      #     chmod 644 ~/.ssh/known_hosts
+      - name: Add Backend to known_hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.BACKEND_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
       # -------------------------
-      # SSH 연결 테스트
+      # SSH 접속 테스트 (직접)
       # -------------------------
-      - name: Test SSH to Bastion
+      - name: Test SSH Direct to Backend
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_IP }} "echo BASTION OK"
+          ssh -i ~/.ssh/id_ed25519 \
+              -o StrictHostKeyChecking=no \
+              ubuntu@${{ secrets.BACKEND_PUBLIC_IP }} \
+              "echo BACKEND SSH OK"
 
-      - name: Test SSH Jump to Backend
+      # -------------------------
+      # 컨테이너 배포 (Pull + Restart)
+      # -------------------------
+      - name: Deploy Backend
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
-          -o ProxyJump=ubuntu@${{ secrets.BASTION_IP }} \
-          ubuntu@${{ secrets.BACKEND_IP }} \
-          "echo BACKEND OK"
-
-      - name: Deploy Backend via Bastion
-        run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
-          -o ProxyJump=ubuntu@${{ secrets.BASTION_IP }} \
-          ubuntu@${{ secrets.BACKEND_IP }} \
-          "cd /home/ubuntu && docker compose pull backend && docker compose up -d backend"
+          ssh -i ~/.ssh/id_ed25519 \
+              -o StrictHostKeyChecking=no \
+              ubuntu@${{ secrets.BACKEND_PUBLIC_IP }} \
+              "cd /home/ubuntu && docker compose pull backend && docker compose up -d backend"
