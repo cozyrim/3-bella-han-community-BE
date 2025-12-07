@@ -4,13 +4,10 @@
 
 ## 📋 목차
 
-- [기술 스택](#기술-스택)
-- [프로젝트 구조](#프로젝트-구조)
-- [주요 기능](#주요-기능)
-- [API 엔드포인트](#api-엔드포인트)
-- [환경 설정](#환경-설정)
-- [실행 방법](#실행-방법)
-- [데이터베이스](#데이터베이스)
+- [기술 스택]
+- [프로젝트 구조]
+- [주요 기능]
+
 
 ## 🛠 기술 스택
 
@@ -93,126 +90,6 @@ src/main/java/com/ktbweek4/community/
 - AWS S3를 통한 이미지 업로드
 - 프로필 이미지, 게시글 이미지 지원
 
-## 🔌 API 엔드포인트
-
-### 인증 (`/api/v1/auth`)
-- `POST /login` - 로그인
-- `POST /logout` - 로그아웃
-
-### 사용자 (`/api/v1/users`)
-- `POST /signup` - 회원가입 (JSON)
-- `POST /signup` - 회원가입 (Multipart - 프로필 이미지 포함)
-- `GET /me` - 내 정보 조회
-- `PATCH /me` - 프로필 수정
-- `PATCH /me/password` - 비밀번호 변경
-- `GET /check-email` - 이메일 중복 확인
-- `GET /check-nickname` - 닉네임 중복 확인
-
-### 게시글 (`/api/v1/posts`)
-- `GET /posts` - 게시글 목록 (무한 스크롤)
-- `GET /posts/{id}` - 게시글 상세
-- `POST /posts` - 게시글 작성
-- `PATCH /posts/{id}` - 게시글 수정
-- `DELETE /posts/{id}` - 게시글 삭제
-- `POST /posts/{id}/likes` - 좋아요
-- `DELETE /posts/{id}/likes` - 좋아요 취소
-
-### 댓글 (`/api/v1/posts/{postId}/comments`)
-- `GET /comments` - 댓글 목록
-- `POST /comments` - 댓글 작성
-- `PATCH /comments/{id}` - 댓글 수정
-- `DELETE /comments/{id}` - 댓글 삭제
-
-### 파일 (`/api/v1/files`)
-- `POST /upload` - 파일 업로드 (S3)
-
-### API 문서
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
-- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
-
-## ⚙️ 환경 설정
-
-### 필수 환경 변수
-
-```bash
-# 데이터베이스
-SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/community
-SPRING_DATASOURCE_USERNAME=root
-SPRING_DATASOURCE_PASSWORD=password
-
-# JWT
-JWT_SECRET=your-secret-key
-JWT_ACCESS_MS=3600000        # 1시간
-JWT_REFRESH_MS=1209600000   # 14일
-
-# AWS S3
-AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
-AWS_REGION=ap-northeast-2
-AWS_S3_BUCKET_NAME=your-bucket-name
-
-# 파일 업로드
-UPLOAD_DIR=/path/to/uploads
-PUBLIC_BASE_URL=http://localhost:8080/files
-```
-
-### 환경별 설정 파일
-
-- `application.yml` - 기본 설정
-- `application-dev.yml` - 개발 환경
-- `application-prod.yml` - 프로덕션 환경
-- `application-test.yml` - 테스트 환경
-
-## 🚀 실행 방법
-
-### 1. 사전 요구사항
-- Java 21 이상
-- MySQL 8.0 이상
-- Gradle 8.0 이상
-
-### 2. 데이터베이스 설정
-```sql
-CREATE DATABASE community CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-### 3. 환경 변수 설정
-`.env` 파일을 생성하거나 환경 변수를 설정합니다.
-
-### 4. 실행
-```bash
-# Gradle Wrapper 사용
-./gradlew bootRun
-
-# 또는 JAR 빌드 후 실행
-./gradlew build
-java -jar build/libs/community-0.0.1-SNAPSHOT.jar
-```
-
-### 5. 테스트 실행
-```bash
-./gradlew test
-```
-
-## 🗄 데이터베이스
-
-### 주요 테이블
-
-- **users** - 사용자 정보
-- **posts** - 게시글
-- **postimages** - 게시글 이미지
-- **comments** - 댓글
-- **post_likes** - 게시글 좋아요
-- **refresh_token** - 리프레시 토큰
-
-### 엔티티 관계
-
-```
-User (1) ──< (N) Post
-User (1) ──< (N) Comment
-User (1) ──< (N) PostLike
-Post (1) ──< (N) PostImage
-Post (1) ──< (N) Comment
-```
 
 ## 📝 주요 설계 특징
 
@@ -238,29 +115,8 @@ Post (1) ──< (N) Comment
 - 커서 기반 페이지네이션
 - QueryDSL을 활용한 동적 쿼리
 
-## 🔧 개발 팁
-
-### QueryDSL 사용
+### 6. QueryDSL 사용
 ```bash
 # Q클래스 생성
 ./gradlew compileJava
 ```
-
-### 로그 레벨 조정
-`application.yml`에서 로그 레벨을 조정할 수 있습니다:
-```yaml
-logging:
-  level:
-    org.hibernate.SQL: debug
-    org.springframework.security: DEBUG
-```
-
-## 📚 참고 자료
-
-- [Spring Boot 공식 문서](https://spring.io/projects/spring-boot)
-- [Spring Security 공식 문서](https://spring.io/projects/spring-security)
-- [QueryDSL 공식 문서](https://querydsl.com/)
-
-## 📄 라이선스
-
-이 프로젝트는 교육 목적으로 작성되었습니다.
