@@ -32,7 +32,7 @@ public class UserController {
 
         
         UserResponseDTO saved = userService.createWithProfile(
-                new UserRequestDTO(form.getEmail(), form.getPassword(), form.getNickname()),
+                new UserRequestDTO(form.getEmail(), form.getPassword(), form.getNickname(), null),
                 form.getProfileImage()
         );
 
