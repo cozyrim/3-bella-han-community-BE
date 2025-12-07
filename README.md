@@ -2,6 +2,9 @@
 
 음식 커뮤니티 플랫폼의 백엔드 서버입니다.
 
+### 시연 영상
+https://drive.google.com/file/d/1HH1I-RAZ8O5SP3cmMB1hxNsOlXyn7bTF/view?usp=sharing
+
 ## 📋 목차
 
 - [기술 스택]
