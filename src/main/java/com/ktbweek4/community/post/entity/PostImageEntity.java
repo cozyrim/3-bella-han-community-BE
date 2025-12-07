@@ -25,6 +25,7 @@ public class PostImageEntity extends BaseTimeEntity {
     private Byte orderIndex;
 
     @Column(name = "is_primary", nullable = false)
+    @Builder.Default
     private Boolean isPrimary = false;
 
     // post n : 1 조인테이블의 fk

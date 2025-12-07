@@ -52,8 +52,12 @@ public class PostEntity extends BaseTimeEntity {
     private List<PostImageEntity> postImages = new ArrayList<>();
 
     // post 1 : 1 postviewCount
-    @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private PostViewCountEntity viewCount;
+//    @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+//    private PostViewCountEntity viewCount;
+
+    @Builder.Default
+    @Column(name = "view_count", columnDefinition = "BIGINT UNSIGNED DEFAULT 0", nullable = false)
+    private Long viewCount = 0L;
 
     public void addImage(PostImageEntity image) {
         this.getPostImages().add(image);

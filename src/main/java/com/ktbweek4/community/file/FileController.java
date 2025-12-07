@@ -14,7 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/files")
+@RequestMapping("/api/v1/files")
 public class FileController {
 
     private final S3FileStorage s3FileStorage;

@@ -1,0 +1,126 @@
+name: BE CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  # -----------------------------
+  # 1) TEST (CI)
+  # -----------------------------
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout backend code
+        uses: actions/checkout@v3
+
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Run Unit Tests
+        run: |
+          chmod +x ./gradlew
+          ./gradlew test --info
+          
+  # -----------------------------
+  # 2) BUILD JAR (CI)
+  # -----------------------------
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout backend code
+        uses: actions/checkout@v3
+
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build JAR
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: build/libs/*.jar
+
+  # -----------------------------
+  # 3) ECR LOGIN + BUILD + PUSH
+  # -----------------------------
+  push-image:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout backend code
+        uses: actions/checkout@v3
+
+      - name: Download JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-jar
+          path: .
+
+      # AWS 로그인 설정
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # ECR 로그인
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Debug ECR values
+        run: |
+          echo "REGISTRY=[${{ secrets.AWS_ECR_REGISTRY }}]"
+          echo "REPO=[${{ secrets.AWS_ECR_REPO }}]"
+
+      - name: Build Docker Image
+        run: |
+          docker build -t ${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPO }}:latest .
+
+      - name: Push to ECR
+        run: |
+          docker push ${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPO }}:latest
+
+  # -----------------------------
+  # 4) DEPLOY to EC2 (CD)
+  # -----------------------------
+  deploy:
+    needs: push-image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.BACKEND_IP }} >> ~/.ssh/known_hosts
+
+      - name: Pull & Restart Backend
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ECR_REGISTRY: ${{ secrets.AWS_ECR_REGISTRY }}
+        run: |
+          ssh ubuntu@${{ secrets.BACKEND_IP }} "
+            aws ecr get-login-password --region ${AWS_REGION} \
+              | docker login --username AWS --password-stdin ${AWS_ECR_REGISTRY} &&
+            cd /home/ubuntu &&
+            docker compose pull backend &&
+            docker compose up -d backend
+          "
