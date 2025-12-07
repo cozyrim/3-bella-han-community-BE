@@ -38,15 +38,19 @@ public class User extends BaseTimeEntity {
 
     // tinyint(1) -> boolean 으로 매핑 가능
     @Column(name = "is_deleted")
+    @Builder.Default
     private Boolean isDeleted = false;
 
     @OneToMany(mappedBy = "author")
+    @Builder.Default
     private List<PostEntity> posts = new ArrayList<>();
 
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Comment> comments = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
+    @Builder.Default
     private List<UsersLike> likes = new ArrayList<>();
 
     @Override

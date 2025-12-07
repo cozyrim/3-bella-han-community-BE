@@ -25,6 +25,7 @@ public class RefreshToken {
     private String jti;
 
     @Column(nullable=false)
+    @Builder.Default
     private boolean revoked = false;
 
     @Column(nullable=false, unique=true, length=190)
