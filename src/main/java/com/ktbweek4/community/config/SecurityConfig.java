@@ -70,8 +70,16 @@ public class SecurityConfig {
                                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"
                         ).permitAll()
 
+                        // 4) 게시글 조회는 비로그인 사용자도 가능 (GET만 허용)
+                        .requestMatchers(HttpMethod.GET, 
+                                "/api/v1/posts",
+                                "/api/v1/posts/**"
+                        ).permitAll()
 
-                        // 4) 나머지는 인증 필요
+                        // 5) 파일 조회도 비로그인 허용
+                        .requestMatchers(HttpMethod.GET, "/api/v1/files/**").permitAll()
+
+                        // 6) 나머지는 인증 필요 (POST, PUT, DELETE 등)
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

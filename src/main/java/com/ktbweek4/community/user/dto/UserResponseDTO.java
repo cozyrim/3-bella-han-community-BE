@@ -19,7 +19,8 @@ public class UserResponseDTO {
     public static UserResponseDTO of(User user) {
         String url = user.getUserProfileUrl();
         if (url == null || url.isBlank()) {
-            url = "http://localhost:8080/files/avatar-default.png";
+            // S3 기본 아바타 URL 사용
+            url = "https://community-image-bucket-1116.s3.ap-northeast-2.amazonaws.com/avatar-default.png";
         }
         return UserResponseDTO.builder()
                 .userId(user.getUserId())
