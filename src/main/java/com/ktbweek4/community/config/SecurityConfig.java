@@ -47,18 +47,23 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_URLS).permitAll()
+                        // 1) 회원가입 / 로그인 / 인증 관련은 가장 먼저 무조건 허용!
+                        .requestMatchers(
+                                "/api/v1/users/signup",
+                                "/api/v1/users/check-email",
+                                "/api/v1/users/check-nickname",
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/refresh",
+                                "/api/v1/auth/logout"
+                        ).permitAll()
+
+                        // 2) OPTIONS 전체 허용
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // auth 관련 (두 버전)
-                        .requestMatchers("/v1/auth/refresh", "/api/v1/auth/refresh").permitAll()
-                        .requestMatchers("/v1/auth/logout",  "/api/v1/auth/logout").permitAll()
 
-                        // 게시글 목록/상세 공개 (두 버전)
-                        .requestMatchers(HttpMethod.GET, "/v1/posts/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/posts/**").permitAll()
+                        // 3) Swagger & 정적 리소스
+                        .requestMatchers(PUBLIC_URLS).permitAll()
 
-                        .requestMatchers("/api/v1/auth/refresh", "/api/v1/auth/logout").permitAll()
-
+                        // 4) 나머지는 인증 필요
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
