@@ -23,6 +23,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService userDetailsService;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+
+        return uri.startsWith("/api/v1/users/signup") ||
+                uri.startsWith("/api/v1/users/check-email") ||
+                uri.startsWith("/api/v1/users/check-nickname") ||
+                uri.startsWith("/api/v1/auth/login") ||
+                uri.startsWith("/api/v1/auth/refresh") ||
+                uri.startsWith("/api/v1/auth/logout") ||
+                uri.startsWith("/swagger") ||
+                uri.startsWith("/v3/api-docs") ||
+                uri.startsWith("/css") ||
+                uri.startsWith("/js") ||
+                uri.startsWith("/images") ||
+                uri.equals("/") ||
+                uri.equals("/favicon.ico");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
