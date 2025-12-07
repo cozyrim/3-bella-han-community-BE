@@ -6,7 +6,7 @@ import com.ktbweek4.community.comment.dto.CommentUpdateRequestDTO;
 import com.ktbweek4.community.comment.entity.Comment;
 import com.ktbweek4.community.comment.repository.CommentRepository;
 import com.ktbweek4.community.common.SliceResponse;
-import com.ktbweek4.community.file.LocalFileStorage;
+import com.ktbweek4.community.file.S3FileStorage;
 import com.ktbweek4.community.post.dto.*;
 import com.ktbweek4.community.post.entity.PostEntity;
 import com.ktbweek4.community.post.entity.PostImageEntity;
@@ -34,7 +34,7 @@ public class PostService {
 
     private final PostLikeRepository postLikeRepository;
     private final PostRepository postRepository;
-    private final LocalFileStorage fileStorage;
+    private final S3FileStorage fileStorage; // S3 사용으로 변경
     private final EntityManager em;
     private final UserService userService;
 
@@ -79,7 +79,7 @@ public class PostService {
             for (MultipartFile img : images) {
                 if (img == null || img.isEmpty()) continue;
 
-                var stored = fileStorage.save(img); // 로컬 저장 + 공개 URL
+                var stored = fileStorage.save(img, "post"); // S3 저장 (post 폴더)
                 PostImageEntity image = PostImageEntity.builder()
                         .postImageUrl(stored.publicUrl())
                         .orderIndex(order)
