@@ -1,6 +1,7 @@
 package com.ktbweek4.community.config;
 
 import com.ktbweek4.community.auth.jwt.JwtAuthenticationFilter;
+import com.ktbweek4.community.auth.jwt.JwtTokenProvider;
 import com.ktbweek4.community.user.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -25,8 +26,8 @@ import java.util.List;
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
+    //private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtTokenProvider jwtTokenProvider;
 //    private static final String[] PUBLIC_URLS = {
 //            "/actuator/health", "/actuator/health/**", "/actuator/info",
 //            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
@@ -37,7 +38,10 @@ public class SecurityConfig {
 //            "/v1/auth/login", "/v1/users/signup",
 //            "/files/**", "/", "/favicon.ico", "/error", "/api/health", "/actuator/**"
 //    };
-
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService);
+    }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -73,7 +77,7 @@ public class SecurityConfig {
                         // 4) 나머지는 인증 필요
                         .anyRequest().authenticated()
                 )
-                //.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable());
 

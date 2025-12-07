@@ -15,7 +15,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-@Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -26,12 +25,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
 
-        return uri.equals("/api/v1/users/signup") ||
+        return uri.startsWith("/api/v1/users/signup") ||
                 uri.startsWith("/api/v1/users/check-email") ||
                 uri.startsWith("/api/v1/users/check-nickname") ||
-                uri.equals("/api/v1/auth/login") ||
-                uri.equals("/api/v1/auth/refresh") ||
-                uri.equals("/api/v1/auth/logout") ||
+                uri.startsWith("/api/v1/auth/login") ||
+                uri.startsWith("/api/v1/auth/refresh") ||
+                uri.startsWith("/api/v1/auth/logout") ||
                 uri.startsWith("/swagger") ||
                 uri.startsWith("/v3/api-docs") ||
                 uri.startsWith("/css/") ||
