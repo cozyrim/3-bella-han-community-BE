@@ -8,6 +8,10 @@ https://community-a-feast-of.n-e.kr/
 ### 시연 영상
 https://drive.google.com/file/d/1HH1I-RAZ8O5SP3cmMB1hxNsOlXyn7bTF/view?usp=sharing
 
+## 아키텍처 구조
+<img width="1197" height="681" alt="Frame 1" src="https://github.com/user-attachments/assets/c8a969fb-97fb-4de4-930c-fa318656cc16" />
+
+
 ## 📋 목차
 
 - [기술 스택]
