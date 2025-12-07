@@ -27,16 +27,16 @@ public class SecurityConfig {
     private final CustomUserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    private static final String[] PUBLIC_URLS = {
-            "/actuator/health", "/actuator/health/**", "/actuator/info",
-            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
-            "/", "/terms", "/privacy", "/css/**", "/js/**", "/images/**",
-            "/api/v1/auth/login", "/api/v1/users/signup",
-            "/api/v1/users/check-email", "/api/v1/users/check-nickname",
-            "/v1/users/check-email", "/v1/users/check-nickname",
-            "/v1/auth/login", "/v1/users/signup",
-            "/files/**", "/", "/favicon.ico", "/error", "/api/health", "/actuator/**"
-    };
+//    private static final String[] PUBLIC_URLS = {
+//            "/actuator/health", "/actuator/health/**", "/actuator/info",
+//            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
+//            "/", "/terms", "/privacy", "/css/**", "/js/**", "/images/**",
+//            "/api/v1/auth/login", "/api/v1/users/signup",
+//            "/api/v1/users/check-email", "/api/v1/users/check-nickname",
+//            "/v1/users/check-email", "/v1/users/check-nickname",
+//            "/v1/auth/login", "/v1/users/signup",
+//            "/files/**", "/", "/favicon.ico", "/error", "/api/health", "/actuator/**"
+//    };
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -61,7 +61,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // 3) Swagger & 정적 리소스
-                        .requestMatchers(PUBLIC_URLS).permitAll()
+                        // 3) 정적 리소스
+                        .requestMatchers(
+                                "/", "/favicon.ico", "/error",
+                                "/css/**", "/js/**", "/images/**",
+                                "/terms", "/privacy",
+                                "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"
+                        ).permitAll()
+
 
                         // 4) 나머지는 인증 필요
                         .anyRequest().authenticated()
