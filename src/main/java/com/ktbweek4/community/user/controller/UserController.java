@@ -88,6 +88,6 @@ public class UserController {
         }
         
         userService.updatePassword(userDetails.getUserId(), passwordDTO);
-        return ApiResponse.success(CommonCode.SUCCESS, null).toResponseEntity();
+        return ApiResponse.<Void>success(CommonCode.SUCCESS, null).toResponseEntity();
     }
 }
