@@ -30,14 +30,24 @@ public class PostController {
 
     private final PostService postService;
 
-    // 게시글 생성 (Spring Security 자동 인증)
+    // 게시글 생성 - FormData 방식 (MultipartFile 이미지 업로드)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<PostResponseDTO>> createPost(
+    public ResponseEntity<ApiResponse<PostResponseDTO>> createPostWithFiles(
             @RequestPart("post") PostRequestDTO postRequestDTO,
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) throws Exception {
         PostResponseDTO savedPost = postService.createPost(postRequestDTO, images, userDetails);
+        return ApiResponse.success(CommonCode.POST_CREATED, savedPost).toResponseEntity();
+    }
+    
+    // 게시글 생성 - JSON 방식 (S3 이미지 URL 리스트)
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ApiResponse<PostResponseDTO>> createPostWithUrls(
+            @RequestBody PostRequestDTO postRequestDTO,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) throws Exception {
+        PostResponseDTO savedPost = postService.createPost(postRequestDTO, null, userDetails);
         return ApiResponse.success(CommonCode.POST_CREATED, savedPost).toResponseEntity();
     }
 

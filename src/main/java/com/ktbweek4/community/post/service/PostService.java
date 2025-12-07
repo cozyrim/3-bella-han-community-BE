@@ -73,6 +73,8 @@ public class PostService {
 
         // 3) 이미지 저장 (있으면)
         byte order = 0;
+        
+        // MultipartFile 이미지 처리 (FormData 업로드)
         if (images != null && !images.isEmpty()) {
             for (MultipartFile img : images) {
                 if (img == null || img.isEmpty()) continue;
@@ -84,6 +86,22 @@ public class PostService {
                         .isPrimary(order == 0) // 첫 번째 이미지를 대표로
                         .build();
 
+                post.addImage(image);
+                order++;
+            }
+        }
+        
+        // S3 이미지 URL 리스트 처리 (Lambda 업로드 후 JSON 전송)
+        if (dto.getImageUrls() != null && !dto.getImageUrls().isEmpty()) {
+            for (String imageUrl : dto.getImageUrls()) {
+                if (imageUrl == null || imageUrl.isBlank()) continue;
+                
+                PostImageEntity image = PostImageEntity.builder()
+                        .postImageUrl(imageUrl) // 이미 S3에 업로드된 URL 사용
+                        .orderIndex(order)
+                        .isPrimary(order == 0) // 첫 번째 이미지를 대표로
+                        .build();
+                
                 post.addImage(image);
                 order++;
             }
