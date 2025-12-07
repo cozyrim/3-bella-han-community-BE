@@ -26,7 +26,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
-    //private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtTokenProvider jwtTokenProvider;
 //    private static final String[] PUBLIC_URLS = {
 //            "/actuator/health", "/actuator/health/**", "/actuator/info",
@@ -38,10 +38,7 @@ public class SecurityConfig {
 //            "/v1/auth/login", "/v1/users/signup",
 //            "/files/**", "/", "/favicon.ico", "/error", "/api/health", "/actuator/**"
 //    };
-    @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService);
-    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -77,7 +74,7 @@ public class SecurityConfig {
                         // 4) 나머지는 인증 필요
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable());
 
