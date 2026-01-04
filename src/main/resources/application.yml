@@ -47,8 +47,8 @@ security:
 
 app:
   upload:
-    dir: ${UPLOAD_DIR:/Users/chaerim/workspace/ktb3-cloudnative/week4-community-backend/community-backend/uploads}
-    public-base-url: ${PUBLIC_BASE_URL:http://localhost:8080/files}
+    dir: ${UPLOAD_DIR:/app/uploads}
+    public-base-url: ${PUBLIC_BASE_URL:http://localhost:8080/uploads}
 
 management:
   endpoints:

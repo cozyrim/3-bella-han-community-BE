@@ -1,6 +1,6 @@
 package com.ktbweek4.community.user.service;
 
-import com.ktbweek4.community.file.S3FileStorage;
+import com.ktbweek4.community.file.FileService;
 import com.ktbweek4.community.user.dto.PasswordUpdateDTO;
 import com.ktbweek4.community.user.dto.UserRequestDTO;
 import com.ktbweek4.community.user.dto.UserResponseDTO;
@@ -28,7 +28,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final S3FileStorage s3FileStorage;
+    private final FileService fileService;
     
     @Value("${app.upload.dir}")
     private String uploadDir;
@@ -101,7 +101,8 @@ public class UserService {
         // 프로필 사진이 있는 경우 처리
         if (profileImage != null && !profileImage.isEmpty()) {
             try {
-                profileUrl = saveProfileImage(profileImage);
+                var stored = fileService.save(profileImage, "profile");
+                profileUrl = stored.publicUrl();
             } catch (IOException e) {
                 throw new RuntimeException("프로필 사진 저장 중 오류가 발생했습니다.", e);
             }
@@ -116,28 +117,6 @@ public class UserService {
 
         User saved = userRepository.save(user);
         return UserResponseDTO.of(saved);
-    }
-    
-    // 프로필 사진 저장
-    private String saveProfileImage(MultipartFile profileImage) throws IOException {
-        // 업로드 디렉토리 생성
-        Path uploadPath = Paths.get(uploadDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
-        
-        // 파일명 생성 (UUID + 원본 확장자)
-        String originalFilename = profileImage.getOriginalFilename();
-        String extension = originalFilename != null ? 
-            originalFilename.substring(originalFilename.lastIndexOf(".")) : ".jpg";
-        String filename = UUID.randomUUID().toString() + extension;
-        
-        // 파일 저장
-        Path filePath = uploadPath.resolve(filename);
-        Files.copy(profileImage.getInputStream(), filePath);
-        
-        // URL 반환 (WebMvcConfig에서 설정한 경로 사용)
-        return "/files/" + filename;
     }
     
     /**
