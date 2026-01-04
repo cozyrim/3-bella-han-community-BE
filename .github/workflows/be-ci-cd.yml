@@ -66,6 +66,7 @@ jobs:
           MYSQL_USER: ${{ secrets.MYSQL_USER }}
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
         run: |
-          docker compose -p community -f docker-compose.prod.yml pull backend mysql
-          docker compose -p community -f docker-compose.prod.yml up -d backend mysql
+          # nginx 서비스를 추가하여 함께 관리합니다.
+          docker compose -p community -f docker-compose.prod.yml pull backend mysql nginx
+          docker compose -p community -f docker-compose.prod.yml up -d backend mysql nginx
           docker system prune -f
