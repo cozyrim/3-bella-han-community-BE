@@ -6,7 +6,7 @@ import com.ktbweek4.community.comment.dto.CommentUpdateRequestDTO;
 import com.ktbweek4.community.comment.entity.Comment;
 import com.ktbweek4.community.comment.repository.CommentRepository;
 import com.ktbweek4.community.common.SliceResponse;
-import com.ktbweek4.community.file.S3FileStorage;
+import com.ktbweek4.community.file.FileService;
 import com.ktbweek4.community.post.dto.*;
 import com.ktbweek4.community.post.entity.PostEntity;
 import com.ktbweek4.community.post.entity.PostImageEntity;
@@ -34,7 +34,7 @@ public class PostService {
 
     private final PostLikeRepository postLikeRepository;
     private final PostRepository postRepository;
-    private final S3FileStorage fileStorage; // S3 사용으로 변경
+    private final FileService fileService; // 로컬 파일 저장으로 변경
     private final EntityManager em;
     private final UserService userService;
 
@@ -79,7 +79,7 @@ public class PostService {
             for (MultipartFile img : images) {
                 if (img == null || img.isEmpty()) continue;
 
-                var stored = fileStorage.save(img, "post"); // S3 저장 (post 폴더)
+                var stored = fileService.save(img, "post"); // 로컬 저장 (post 폴더)
                 PostImageEntity image = PostImageEntity.builder()
                         .postImageUrl(stored.publicUrl())
                         .orderIndex(order)
@@ -101,7 +101,7 @@ public class PostService {
                         .orderIndex(order)
                         .isPrimary(order == 0) // 첫 번째 이미지를 대표로
                         .build();
-                
+
                 post.addImage(image);
                 order++;
             }
@@ -144,7 +144,7 @@ public class PostService {
             for (Long imgId : dto.getRemoveImageIds()) {
                 PostImageEntity image = current.get(imgId);
                 if (image != null) {
-                    try { fileStorage.deleteByUrl(image.getPostImageUrl()); } catch (Exception ignore) {}
+                    try { fileService.deleteByUrl(image.getPostImageUrl()); } catch (Exception ignore) {}
                     post.removeImage(image); // orphanRemoval=true로 DB행 삭제
                 }
             }
@@ -156,7 +156,7 @@ public class PostService {
             for (MultipartFile img : newImages) {
                 if (img == null || img.isEmpty()) continue;
 
-                var stored = fileStorage.save(img);
+                var stored = fileService.save(img);
 
                 PostImageEntity image = PostImageEntity.builder()
                         .postImageUrl(stored.publicUrl())

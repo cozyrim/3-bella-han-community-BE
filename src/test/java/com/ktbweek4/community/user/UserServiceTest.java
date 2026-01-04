@@ -1,7 +1,7 @@
 package com.ktbweek4.community.user;
 
 
-import com.ktbweek4.community.file.S3FileStorage;
+import com.ktbweek4.community.file.FileService;
 import com.ktbweek4.community.user.dto.UserRequestDTO;
 import com.ktbweek4.community.user.dto.UserResponseDTO;
 import com.ktbweek4.community.user.entity.User;
@@ -28,7 +28,7 @@ public class UserServiceTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private S3FileStorage s3FileStorage;
+    private FileService fileService;
 
     @InjectMocks
     private UserService userService;
