@@ -2,175 +2,65 @@ name: Community Backend CI/CD
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}-backend
 
 jobs:
-  # -----------------------------
-  # 1) TEST & BUILD (CI)
-  # -----------------------------
-  test-and-build:
-    runs-on: ubuntu-latest
-    outputs:
-      image-tag: ${{ steps.meta.outputs.tags }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Run Unit Tests
-        run: |
-          chmod +x ./gradlew
-          ./gradlew test --info --no-daemon
-
-      - name: Build JAR
-        run: |
-          ./gradlew clean build -x test --no-daemon
-
-      - name: Upload JAR artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-jar
-          path: build/libs/*.jar
-          retention-days: 1
-
-      # Docker 메타데이터 추출 (태그 생성용)
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
-
-  # -----------------------------
-  # 2) BUILD & PUSH DOCKER IMAGE
-  # -----------------------------
   build-and-push:
-    needs: test-and-build
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Download JAR artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/setup-java@v4
         with:
-          name: backend-jar
-          path: .
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      - name: Build JAR
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean bootJar -x test --no-daemon
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Container Registry
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64
           push: true
-          tags: ${{ needs.test-and-build.outputs.image-tag }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # -----------------------------
-  # 3) DEPLOY TO RASPBERRY PI
-  # -----------------------------
   deploy:
     needs: build-and-push
     runs-on: [self-hosted, linux, arm64]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-
-      - name: Copy docker-compose and create .env
+      - name: Deploy
         run: |
-          scp -o StrictHostKeyChecking=no docker-compose.prod.yml ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }}:/home/${{ secrets.RASPBERRY_USER }}/docker-compose.yml
-          ssh -o StrictHostKeyChecking=no ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }} "
-            cat > .env << 'EOF'
-              MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-              MYSQL_USER=${{ secrets.MYSQL_USER }}
-              MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-          EOF
-          "
-
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.RASPBERRY_SSH_KEY }}
-
-      - name: Test SSH Connection
-        run: |
-          echo "Testing SSH connection to ${{ secrets.RASPBERRY_HOST }}..."
-          ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }} "echo 'SSH connection successful'"
-
-      - name: Deploy to Raspberry Pi
-        run: |
-          echo "Starting deployment to Raspberry Pi..."
-          ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }} "
-            echo 'Connected to Raspberry Pi successfully' &&
-            docker login ghcr.io -u ${{ secrets.RASPBERRY_USER }} -p ${{ secrets.GITHUB_TOKEN }} &&
-            echo 'Docker login successful' &&
-            docker pull ${{ needs.test-and-build.outputs.image-tag }} &&
-            echo 'Backend image pulled successfully' &&
-            docker tag ${{ needs.test-and-build.outputs.image-tag }} community-backend:latest &&
-            echo 'Image tagged successfully' &&
-            docker compose down backend &&
-            echo 'Backend container stopped' &&
-            docker compose up -d backend &&
-            echo 'Backend container started' &&
-            docker system prune -f &&
-            echo 'Docker system pruned' &&
-            echo 'Deployment completed successfully'
-          "
-
-      - name: Verify deployment
-        run: |
-          sleep 10
-          ssh -o StrictHostKeyChecking=no ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }} "
-            docker ps --filter name=community-backend --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' &&
-            curl -f http://localhost:18080/actuator/health || echo 'Health check failed'
-          "
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest community-backend:latest
+          docker compose -f docker-compose.prod.yml up -d backend
+          docker system prune -f
