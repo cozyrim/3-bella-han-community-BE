@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # MySQL Database
   mysql:
@@ -24,7 +22,7 @@ services:
 
   # Spring Boot Backend
   backend:
-    image: community-backend:latest
+    image: ghcr.io/cozyrim/community-backend:latest
     container_name: community-backend
     restart: unless-stopped
     environment:
@@ -49,7 +47,7 @@ services:
 
   # React Frontend
   frontend:
-    image: community-frontend:latest
+    image: ghcr.io/cozyrim/community-frontend:latest
     container_name: community-frontend
     restart: unless-stopped
     ports:
