@@ -62,6 +62,7 @@ jobs:
 
       - name: Deploy
         run: |
-          docker compose -p community -f docker-compose.prod.yml pull
-          docker compose -p community -f docker-compose.prod.yml up -d
+          # 백엔드와 MySQL 이미지만 pull 받고 실행합니다.
+          docker compose -p community -f docker-compose.prod.yml pull backend mysql
+          docker compose -p community -f docker-compose.prod.yml up -d backend mysql
           docker system prune -f
