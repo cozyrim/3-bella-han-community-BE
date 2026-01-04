@@ -39,7 +39,7 @@ public class UserServiceTest {
         // @Value로 주입되는 필드들을 리플렉션으로 설정
         ReflectionTestUtils.setField(userService, "uploadDir", "/tmp/uploads");
         ReflectionTestUtils.setField(userService, "defaultAvatarUrl", 
-            "https://community-image-bucket-1116.s3.ap-northeast-2.amazonaws.com/avatar-default.png");
+            "/images/avatar-default.png");
     }
 
     @Test
@@ -60,7 +60,7 @@ public class UserServiceTest {
                 .email(userRequestDTO.getEmail())
                 .nickname(userRequestDTO.getNickname())
                 .password("encodedPassword")
-                .userProfileUrl("https://community-image-bucket-1116.s3.ap-northeast-2.amazonaws.com/avatar-default.png")
+                .userProfileUrl("/images/avatar-default.png")
                 .build();
 
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {

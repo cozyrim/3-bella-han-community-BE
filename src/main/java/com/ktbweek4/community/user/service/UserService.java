@@ -33,7 +33,7 @@ public class UserService {
     @Value("${app.upload.dir}")
     private String uploadDir;
     
-    @Value("${app.default.avatar-url:https://community-image-bucket-1116.s3.ap-northeast-2.amazonaws.com/avatar-default.png}")
+    @Value("${app.default.avatar-url:/images/avatar-default.png}")
     private String defaultAvatarUrl;
 
     public UserResponseDTO create(UserRequestDTO request) {
