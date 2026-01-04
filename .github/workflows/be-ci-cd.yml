@@ -125,20 +125,46 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+
+      - name: Copy docker-compose and create .env
+        run: |
+          scp -o StrictHostKeyChecking=no docker-compose.prod.yml ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }}:/home/${{ secrets.RASPBERRY_USER }}/docker-compose.yml
+          ssh -o StrictHostKeyChecking=no ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }} "
+            cat > .env << 'EOF'
+MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+MYSQL_USER=${{ secrets.MYSQL_USER }}
+MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+EOF
+          "
+
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.RASPBERRY_SSH_KEY }}
 
+      - name: Test SSH Connection
+        run: |
+          echo "Testing SSH connection to ${{ secrets.RASPBERRY_HOST }}..."
+          ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }} "echo 'SSH connection successful'"
+
       - name: Deploy to Raspberry Pi
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }} "
-            cd /home/${{ secrets.RASPBERRY_USER }}/community-backend &&
-            git pull origin main &&
+          echo "Starting deployment to Raspberry Pi..."
+          ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }} "
+            echo 'Connected to Raspberry Pi successfully' &&
+            docker login ghcr.io -u ${{ secrets.RASPBERRY_USER }} -p ${{ secrets.GITHUB_TOKEN }} &&
+            echo 'Docker login successful' &&
+            docker pull ${{ needs.test-and-build.outputs.image-tag }} &&
+            echo 'Backend image pulled successfully' &&
+            docker tag ${{ needs.test-and-build.outputs.image-tag }} community-backend:latest &&
+            echo 'Image tagged successfully' &&
             docker compose down backend &&
-            docker compose pull backend &&
+            echo 'Backend container stopped' &&
             docker compose up -d backend &&
-            docker system prune -f
+            echo 'Backend container started' &&
+            docker system prune -f &&
+            echo 'Docker system pruned' &&
+            echo 'Deployment completed successfully'
           "
 
       - name: Verify deployment
