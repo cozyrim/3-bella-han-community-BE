@@ -62,5 +62,11 @@ jobs:
         run: |
           docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest community-backend:latest
-          docker compose -f docker-compose.prod.yml up -d backend
+          
+          # 1. 기존에 이름이 겹치는 컨테이너가 있으면 강제 종료 및 삭제 (충돌 방지)
+          docker rm -f community-backend community-mysql || true
+          
+          # 2. 프로젝트 이름을 'community'로 고정하여 실행
+          docker compose -p community -f docker-compose.prod.yml up -d
+          
           docker system prune -f
