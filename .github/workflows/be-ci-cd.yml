@@ -28,7 +28,7 @@ jobs:
   # 2단계: 배포만 라즈베리파이에서 수행 (가벼운 작업)
   deploy:
     needs: build
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, arm64]
     steps:
       - uses: actions/checkout@v4
       - name: Download JAR
