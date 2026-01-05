@@ -42,6 +42,6 @@ jobs:
           MYSQL_USER: ${{ secrets.MYSQL_USER }}
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
         run: |
-          docker build -t community-backend:latest .
+          docker build -t ghcr.io/cozyrim/community-backend:latest .
           docker compose -p community -f docker-compose.prod.yml up -d backend mysql nginx
           docker system prune -f
