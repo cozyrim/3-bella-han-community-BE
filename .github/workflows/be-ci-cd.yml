@@ -5,7 +5,6 @@ on:
     branches: [ main ]
 
 jobs:
-  # 1단계: 빌드는 성능 좋은 GitHub 서버에서 수행 (매우 빠름)
   build:
     runs-on: ubuntu-latest
     steps:
@@ -18,14 +17,13 @@ jobs:
       - name: Build JAR
         run: |
           chmod +x ./gradlew
-          ./gradlew bootJar -x test --no-daemon
+          ./gradlew clean bootJar -x test --no-daemon
       - name: Upload JAR
         uses: actions/upload-artifact@v4
         with:
           name: backend-jar
           path: build/libs/*.jar
 
-  # 2단계: 배포만 라즈베리파이에서 수행 (가벼운 작업)
   deploy:
     needs: build
     runs-on: [self-hosted, linux, arm64]
@@ -42,6 +40,12 @@ jobs:
           MYSQL_USER: ${{ secrets.MYSQL_USER }}
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
         run: |
+          # 1. 최신 이미지 빌드
           docker build -t ghcr.io/cozyrim/community-backend:latest .
-          docker compose -p community -f docker-compose.prod.yml up -d backend mysql nginx
+          
+          # 2. Nginx 설정 파일 강제 동기화 및 컨테이너 재시작
+          # --force-recreate를 사용하여 변경된 nginx.conf를 확실히 적용합니다.
+          docker compose -p community -f docker-compose.prod.yml up -d --force-recreate backend mysql nginx
+          
+          # 3. 정리
           docker system prune -f
