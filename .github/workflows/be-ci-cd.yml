@@ -39,6 +39,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
           MYSQL_USER: ${{ secrets.MYSQL_USER }}
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          PUBLIC_BASE_URL: https://community-a-feast-of.n-e.kr/uploads
           PUBLIC_BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
         run: |
           # 1. 최신 이미지 빌드
